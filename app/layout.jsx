@@ -1,5 +1,14 @@
 import localFont from "next/font/local";
 import "./globals.css";
+import SpeedTest from './speed-test'
+
+const Page = () => {
+  return (
+    <SpeedTest />
+  )
+}
+
+export { Page };
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
