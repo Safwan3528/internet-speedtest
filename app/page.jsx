@@ -13,7 +13,6 @@ const SpeedTest = () => {
   const [uploadSpeed, setUploadSpeed] = useState(0)
   const [pingLatency, setPingLatency] = useState(0)
   const [idleLatency, setIdleLatency] = useState(0)
-  const [ipType, setIpType] = useState('')
   const [currentTest, setCurrentTest] = useState(null)
   const [darkMode, setDarkMode] = useState(false)
 
@@ -23,34 +22,54 @@ const SpeedTest = () => {
       interval = setInterval(() => {
         setProgress((prevProgress) => {
           if (prevProgress >= 100) {
-            if (currentTest === 'download') {
-              setCurrentTest('upload')
-              return 0
-            } else if (currentTest === 'upload') {
-              setCurrentTest('ping')
-              return 0
-            } else {
-              setIsRunning(false)
-              setCurrentTest(null)
-              return 100
-            }
+            setIsRunning(false)
+            setCurrentTest(null)
+            return 100
           }
-          return prevProgress + 2
+          return prevProgress + 1
         })
 
-        if (currentTest === 'download') {
-          setDownloadSpeed(Math.random() * 100)
-        } else if (currentTest === 'upload') {
-          setUploadSpeed(Math.random() * 50)
-        } else if (currentTest === 'ping') {
-          setPingLatency(Math.random() * 50)
-          setIdleLatency(Math.random() * 20)
-          setIpType(['IPv4', 'IPv6'][Math.floor(Math.random() * 2)])
+        if (progress < 40) {
+          setCurrentTest('download')
+          fetchSpeedTestResults()
+        } else if (progress < 80) {
+          setCurrentTest('upload')
+          fetchSpeedTestResults()
+        } else {
+          setCurrentTest('ping')
+          fetchSpeedTestResults()
         }
       }, 100)
     }
     return () => clearInterval(interval)
-  }, [isRunning, currentTest])
+  }, [isRunning, progress])
+
+  const fetchSpeedTestResults = async () => {
+    try {
+      const response = await fetch('https://www.speedtest.net/api/js/servers?engine=js&https_functional=true')
+      const data = await response.json()
+      const server = data[0] // Use the first server in the list
+
+      const testUrl = `https://${server.host}/speedtest/upload.php`
+      const startTime = Date.now()
+      const res = await fetch(testUrl)
+      const endTime = Date.now()
+
+      const latency = endTime - startTime
+      setPingLatency(latency)
+      setIdleLatency(latency * 0.8) // Simulating idle latency as 80% of ping latency
+
+      // Simulating download and upload speeds based on latency
+      // These are not real speed test results, just estimations for demonstration
+      const estimatedDownloadSpeed = 100000 / latency
+      const estimatedUploadSpeed = 50000 / latency
+
+      setDownloadSpeed(estimatedDownloadSpeed)
+      setUploadSpeed(estimatedUploadSpeed)
+    } catch (error) {
+      console.error('Error fetching speed test results:', error)
+    }
+  }
 
   const startTest = () => {
     setIsRunning(true)
@@ -59,7 +78,6 @@ const SpeedTest = () => {
     setUploadSpeed(0)
     setPingLatency(0)
     setIdleLatency(0)
-    setIpType('')
     setCurrentTest('download')
   }
 
@@ -139,10 +157,6 @@ const SpeedTest = () => {
             <p className="mt-2 font-semibold">Idle Latency</p>
             <p className="text-xl font-bold">{idleLatency.toFixed(2)} ms</p>
           </div>
-        </div>
-        <div className="mt-4 text-center">
-          <p className="font-semibold">IP Type</p>
-          <p className="text-xl font-bold">{ipType || 'N/A'}</p>
         </div>
         <div className="mt-8">
           <Button
