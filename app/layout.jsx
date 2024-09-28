@@ -1,6 +1,6 @@
 import localFont from "next/font/local";
 import "./globals.css";
-import SpeedTest from "./speed-test";
+import SpeedTest from "@/components/speed-test";
 
 const Page = () => {
   return <SpeedTest />;
